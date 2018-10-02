@@ -63,5 +63,3 @@ def get_tagged_texts_as_pd(folders, cache_folder):
     else:
         df = pd.read_csv(os.path.join(cache_folder, 'en.tags.pd.extracted.csv'))
         return df
-
-

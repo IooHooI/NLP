@@ -6,14 +6,24 @@ import string
 tqdm.pandas()
 
 
-def filtrations(df):
-    tqdm.pandas(desc="Punctuation: ")
+def filtrations(df, with_dots=False):
+    if with_dots:
+        tqdm.pandas(desc="Punctuation without dots: ")
+        df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation.replace('.', ''))]
+    else:
+        tqdm.pandas(desc="Punctuation with dots: ")
+        df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
 
-    df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
+    df = df[df.word_net_sense_number != 'O']
+
+    df.word_net_sense_number = df.word_net_sense_number.astype(np.int64)
+
     df = df[df.ner_tag != '[]']
 
     tqdm.pandas(desc="Target tags: ")
+
     df.ner_tag = df.ner_tag.progress_apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
+
     tqdm.pandas(desc="")
 
     return df
@@ -40,11 +50,6 @@ def crf_filtration_and_pre_processing(df):
         'contains_digits',
         'word_len'
     ]
-
-    df = df[df.ner_tag != '[]']
-
-    df.ner_tag = df.ner_tag.apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
-
     for i in trange(1, len(df)):
         if df.iloc[i]['token'] not in string.punctuation:
             curr_sent.append(dict(zip(columns, df.iloc[i][columns].values.tolist())))
@@ -57,10 +62,6 @@ def crf_filtration_and_pre_processing(df):
 
 
 def additional_features(df):
-
-    df = df[df.word_net_sense_number != 'O']
-    df.word_net_sense_number = df.word_net_sense_number.astype(np.int64)
-
     tqdm.pandas(desc="NER tagged: ")
     df['ner_tagged'] = df.ner_tag.progress_apply(lambda x: int(str(x) != 'O'))
 
