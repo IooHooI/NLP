@@ -19,8 +19,6 @@ def filtrations(df, with_dots=False):
 
     df = df[df.word_net_sense_number != 'O']
 
-    df.word_net_sense_number = df.word_net_sense_number.astype(np.int64)
-
     df = df[df.ner_tag != '[]']
 
     tqdm.pandas(desc="Target tags: ")
