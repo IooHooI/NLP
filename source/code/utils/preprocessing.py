@@ -1,9 +1,8 @@
-from tqdm.autonotebook import tqdm
-from tqdm import trange
 import numpy as np
 import string
 
-tqdm.pandas()
+from nltk.corpus import stopwords
+from tqdm.autonotebook import tqdm
 
 
 def filtrations(df, with_dots=False):
@@ -13,6 +12,10 @@ def filtrations(df, with_dots=False):
     else:
         tqdm.pandas(desc="Punctuation with dots: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
+
+    stopWords = set(stopwords.words('english'))
+
+    df = df[~df.lemma.isin(stopWords)]
 
     df = df[df.word_net_sense_number != 'O']
 
@@ -50,7 +53,7 @@ def crf_filtration_and_pre_processing(df):
         'contains_digits',
         'word_len'
     ]
-    for i in trange(1, len(df)):
+    for i in tqdm(range(1, len(df)), desc="Compose sentences: "):
         if df.iloc[i]['token'] not in string.punctuation:
             curr_sent.append(dict(zip(columns, df.iloc[i][columns].values.tolist())))
             curr_tags.append(df.iloc[i]['ner_tag'])

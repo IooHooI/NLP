@@ -1,10 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-
 from tqdm.autonotebook import tqdm
-
-tqdm.pandas()
 
 
 def filter_by_subcorpus(data_root_folder, subcorpus_name):

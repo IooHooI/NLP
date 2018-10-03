@@ -1,7 +1,8 @@
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
+from sklearn.metrics import f1_score
 
 
-class MemoryTagger(BaseEstimator, TransformerMixin):
+class MemoryTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
 
     def __init__(self):
         self.memory = {}
@@ -30,3 +31,7 @@ class MemoryTagger(BaseEstimator, TransformerMixin):
         Predict the the tag from memory. If word is unknown, predict 'O'.
         """
         return [self.memory.get(x, 'O') for x in X]
+
+    def score(self, X, y, sample_weight=None):
+        y_pred = self.predict(X)
+        return f1_score(y, y_pred, average='macro')
