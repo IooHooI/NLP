@@ -60,3 +60,12 @@ def get_tagged_texts_as_pd(folders, cache_folder):
     else:
         df = pd.read_csv(os.path.join(cache_folder, 'en.tags.pd.extracted.csv'))
         return df
+
+
+def create_sub_folders(path):
+    folders = path.split('/')
+    sub_folder = ''
+    for folder in folders:
+        sub_folder += folder + '/'
+        if not os.path.exists(sub_folder):
+            os.mkdir(sub_folder)

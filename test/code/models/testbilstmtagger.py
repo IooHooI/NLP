@@ -9,32 +9,20 @@ from keras.layers import Dense
 from keras.layers import TimeDistributed
 from keras.layers import Bidirectional
 
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import ReduceLROnPlateau
-
 from keras.preprocessing.sequence import pad_sequences
 
 from keras.utils import to_categorical
 
 from keras_contrib.layers import CRF as kerascrf
 
-from keras_tqdm import TQDMNotebookCallback
-
 import numpy as np
 
-import os
-
 from sklearn.metrics import f1_score
-
-from source.code.utils.utils import create_sub_folders
 
 
 class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
 
-    def __init__(self, checkpoint_dir='./', max_len=75, batch_size=32, epochs=5, validation_split=0.1):
-        self.checkpoint_dir = checkpoint_dir
-        create_sub_folders(self.checkpoint_dir)
+    def __init__(self, max_len=75, batch_size=32, epochs=5, validation_split=0.1):
         self.max_len = max_len
         self.batch_size = batch_size
         self.epochs = epochs
@@ -51,7 +39,7 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
         self.out = self.crf(self.model)
 
         self.model = Model(self._input, self.out)
-        self.model.compile(optimizer="rmsprop", loss=self.crf.loss_function, metrics=[self.crf.accuracy])
+        self.model.compile(optimizer="rmsprop", loss=kerascrf.loss_function, metrics=[kerascrf.accuracy])
 
     def fit(self, X, y):
         self.words = list(set([word['lemma'] for sentence in X for word in sentence]))
@@ -78,24 +66,7 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
             batch_size=self.batch_size,
             epochs=self.epochs,
             validation_split=self.validation_split,
-            verbose=0,
-            callbacks=[
-                ModelCheckpoint(
-                    filepath=os.path.join(self.checkpoint_dir, 'model.h5'),
-                    save_best_only=True,
-                    verbose=1
-                ),
-                EarlyStopping(
-                    patience=3,
-                    verbose=1
-                ),
-                ReduceLROnPlateau(
-                    min_lr=0.0001,
-                    mode='auto',
-                    verbose=1
-                ),
-                TQDMNotebookCallback()
-            ]
+            verbose=1
         )
 
     def predict(self, X, y=None):

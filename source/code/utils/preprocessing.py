@@ -25,14 +25,14 @@ def filtrations(df, with_dots=False):
 
     tqdm.pandas(desc="Target tags: ")
 
-    df.ner_tag = df.ner_tag.progress_apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
+    # df.ner_tag = df.ner_tag.progress_apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
 
     tqdm.pandas(desc="")
 
     return df
 
 
-def crf_filtration_and_pre_processing(df):
+def crf_pre_processing(df):
     sentences, tags = [], []
     curr_sent, curr_tags = [], []
     columns = [

@@ -49,3 +49,6 @@ tqdm==4.26.0
 traitlets==4.3.2
 wcwidth==0.1.7
 Werkzeug==0.14.1
+nltk==3.3
+ipywidgets==7.4.2
+keras-tqdm==2.0.1
