@@ -41,31 +41,55 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
         self.validation_split = validation_split
 
     def _build_the_model(self):
-        self._input = Input(shape=(self.max_len,))
-
-        self.model = Embedding(input_dim=self.n_words + 1, output_dim=20, input_length=self.max_len, mask_zero=True)(self._input)
-        self.model = Bidirectional(LSTM(units=50, return_sequences=True, recurrent_dropout=0.1))(self.model)
-        self.model = TimeDistributed(Dense(50, activation="relu"))(self.model)
-
+        self._input = Input(
+            shape=(self.max_len,)
+        )
+        self.model = Embedding(
+            input_dim=self.n_words + 1,
+            output_dim=20,
+            input_length=self.max_len,
+            mask_zero=True
+        )(self._input)
+        self.model = Bidirectional(
+            LSTM(
+                units=50,
+                return_sequences=True,
+                recurrent_dropout=0.1
+            )
+        )(self.model)
+        self.model = TimeDistributed(
+            Dense(
+                50,
+                activation="relu"
+            )
+        )(self.model)
         self.crf = kerascrf(self.n_tags)
         self.out = self.crf(self.model)
-
-        self.model = Model(self._input, self.out)
-        self.model.compile(optimizer="rmsprop", loss=self.crf.loss_function, metrics=[self.crf.accuracy])
+        self.model = Model(
+            self._input,
+            self.out
+        )
+        self.model.compile(
+            optimizer="rmsprop",
+            loss=self.crf.loss_function,
+            metrics=[self.crf.accuracy]
+        )
 
     def fit(self, X, y):
-        self.words = list(set([word['lemma'] for sentence in X for word in sentence]))
+        self.words = list(set([word for sentence in X for word in sentence]))
         self.words.append("ENDPAD")
-        self.unique_tags = list(set([word for sentence in y for word in sentence]))
+        self.words.append("unknown word")
+        self.unique_tags = list(set([tag for sentence in y for tag in sentence]))
         self.word2idx = {w: i + 1 for i, w in enumerate(self.words)}
         self.tag2idx = {t: i for i, t in enumerate(self.unique_tags)}
+        self.idx2tag = {i: w for w, i in self.tag2idx.items()}
 
         self.n_words = len(self.words)
         self.n_tags = len(self.unique_tags)
         self._build_the_model()
         self.model.summary()
 
-        X = [[self.word2idx[w['lemma']] for w in s] for s in X]
+        X = [[self.word2idx[w] for w in s] for s in X]
         X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
 
         y = [[self.tag2idx[w] for w in s] for s in y]
@@ -99,9 +123,17 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
         )
 
     def predict(self, X, y=None):
-        X = [[self.word2idx[w['lemma']] for w in s] for s in X]
+        X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
         X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
-        return self.model.predict(X, verbose=1)
+        one_hot_predictions = self.model.predict(X, verbose=1)
+        out = []
+        for pred_i in one_hot_predictions:
+            out_i = []
+            for p in pred_i:
+                p_i = np.argmax(p)
+                out_i.append(self.idx2tag[p_i].replace("PAD", "O"))
+            out.append(out_i)
+        return out
 
     def score(self, X, y, sample_weight=None):
         y_pred = self.predict(X)
