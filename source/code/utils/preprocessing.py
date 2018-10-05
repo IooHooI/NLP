@@ -5,6 +5,23 @@ from tqdm.autonotebook import tqdm
 
 
 def filtrations(df, with_dots=False):
+    def iob3bio(tags):
+        entity = False
+        curr_tag = ''
+        for i in tqdm(range(len(tags)), desc='IOB to BIO: '):
+            if tags[i] != 'O' and not entity:
+                entity = True
+                curr_tag = tags[i]
+                tags[i] = 'B-{}'.format(tags[i])
+            elif tags[i] != 'O' and tags[i] == curr_tag and entity:
+                tags[i] = 'I-{}'.format(tags[i])
+            elif tags[i] != 'O' and tags[i] != curr_tag and entity:
+                curr_tag = tags[i]
+                tags[i] = 'B-{}'.format(tags[i])
+            else:
+                entity = False
+        return tags
+
     if with_dots:
         tqdm.pandas(desc="Punctuation without dots: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation.replace('.', ''))]
@@ -22,7 +39,9 @@ def filtrations(df, with_dots=False):
 
     tqdm.pandas(desc="Target tags: ")
 
-    # df.ner_tag = df.ner_tag.progress_apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
+    df.ner_tag = df.ner_tag.progress_apply(lambda x: str(x).split('-')[0] if str(x) != 'O' else str(x))
+
+    df.ner_tag = iob3bio(df.ner_tag.values)
 
     tqdm.pandas(desc="")
 
