@@ -25,7 +25,7 @@ import numpy as np
 
 import os
 
-from sklearn.metrics import f1_score
+from seqeval.metrics import f1_score
 
 from source.code.utils.utils import create_sub_folders
 
@@ -34,11 +34,19 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
 
     def __init__(self, checkpoint_dir='./', max_len=75, batch_size=32, epochs=5, validation_split=0.1):
         self.checkpoint_dir = checkpoint_dir
-        create_sub_folders(self.checkpoint_dir)
         self.max_len = max_len
         self.batch_size = batch_size
         self.epochs = epochs
         self.validation_split = validation_split
+        self.words = []
+        self.unique_tags = []
+        self.word2idx = {}
+        self.tag2idx = {}
+        self.idx2tag = {}
+        self.n_words = 0
+        self.n_tags = 0
+
+        create_sub_folders(self.checkpoint_dir)
 
     def _build_the_model(self):
         self._input = Input(
@@ -77,15 +85,17 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
 
     def fit(self, X, y):
         self.words = list(set([word for sentence in X for word in sentence]))
-        self.words.append("ENDPAD")
         self.words.append("unknown word")
+        self.words.append("__ENDPAD__")
         self.unique_tags = list(set([tag for sentence in y for tag in sentence]))
+
         self.word2idx = {w: i + 1 for i, w in enumerate(self.words)}
         self.tag2idx = {t: i for i, t in enumerate(self.unique_tags)}
         self.idx2tag = {i: w for w, i in self.tag2idx.items()}
 
         self.n_words = len(self.words)
         self.n_tags = len(self.unique_tags)
+
         self._build_the_model()
         self.model.summary()
 
@@ -122,10 +132,7 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
             ]
         )
 
-    def predict(self, X, y=None):
-        X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
-        X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
-        one_hot_predictions = self.model.predict(X, verbose=1)
+    def _convers2tags(self, one_hot_predictions):
         out = []
         for pred_i in one_hot_predictions:
             out_i = []
@@ -135,6 +142,21 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
             out.append(out_i)
         return out
 
+    def predict(self, X, y=None):
+        X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
+        X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
+        one_hot_predictions = self.model.predict(X, verbose=1)
+        result = self._convers2tags(one_hot_predictions)
+        return result
+
     def score(self, X, y, sample_weight=None):
-        y_pred = self.predict(X)
-        return f1_score(y, y_pred, average='macro')
+        X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
+        X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
+        one_hot_predictions = self.model.predict(X, verbose=1)
+        y_pred = self._convers2tags(one_hot_predictions)
+
+        y_true = [[self.tag2idx[w] for w in s] for s in y]
+        y_true = pad_sequences(maxlen=75, sequences=y_true, padding="post", value=self.tag2idx["O"])
+        y_true = [[self.idx2tag[w] for w in s] for s in y_true]
+
+        return f1_score(y_true, y_pred)
