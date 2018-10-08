@@ -60,7 +60,6 @@ def crf_pre_processing(df):
         'semantic_relation',
         'animacy_tag',
         'super_tag',
-        'ner_tagged',
         'semantic_relation_tagged',
         'animacy_tagged',
         'lambda_dsr_len',
@@ -81,9 +80,6 @@ def crf_pre_processing(df):
 
 
 def additional_features(df):
-    tqdm.pandas(desc="NER tagged: ")
-    df['ner_tagged'] = df.ner_tag.progress_apply(lambda x: int(str(x) != 'O'))
-
     tqdm.pandas(desc="Semantic relation: ")
     df['semantic_relation_tagged'] = df.semantic_relation.progress_apply(lambda x: int(str(x) != 'O'))
 
