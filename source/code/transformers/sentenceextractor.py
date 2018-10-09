@@ -12,8 +12,8 @@ class SentenceExtractor(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None, **fit_params):
         X[X.lemma == '.'] = '%'
-        X, y = np.array([np.array(s.split()) for s in ' '.join(X.lemma.values).split('%')]), \
-               np.array([np.array(s.split()) for s in ' '.join(X.ner_tag.values).split('%')])
+        X, y = np.array([np.array(s.strip().split('|')) for s in '|'.join(X.lemma.values).strip().split('%')]), \
+               np.array([np.array(s.strip().split('|')) for s in '|'.join(X.ner_tag.values).strip().split('%')])
         return X, y
 
     def fit_transform(self, X, y=None, **fit_params):

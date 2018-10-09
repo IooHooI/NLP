@@ -29,13 +29,19 @@ def filtrations(df, with_dots=False):
         tqdm.pandas(desc="Punctuation with dots: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
 
-    stopWords = set(stopwords.words('english'))
+    stop_words = set(stopwords.words('english'))
 
-    df = df[~df.lemma.isin(stopWords)]
+    df = df[~df.lemma.isin(stop_words)]
 
     df = df[df.word_net_sense_number != 'O']
 
     df = df[df.ner_tag != '[]']
+
+    df = df[df.ner_tag != '']
+
+    df = df[df.lemma != '']
+
+    df = df[df.token != '']
 
     tqdm.pandas(desc="Target tags: ")
 
