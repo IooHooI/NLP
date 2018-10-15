@@ -3,6 +3,7 @@ import unittest
 from source.code.utils.utils import filter_by_subcorpus
 from source.code.utils.utils import get_tagged_texts_as_pd
 from source.code.utils.preprocessing import filtrations
+from source.code.utils.preprocessing import additional_features
 
 
 class TestPreProcessingMethods(unittest.TestCase):
@@ -24,6 +25,15 @@ class TestPreProcessingMethods(unittest.TestCase):
 
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
         data = filtrations(data, with_dots=True)
+
+        self.assertTrue(780339, len(data))
+
+    def test_case_4(self):
+        folders = filter_by_subcorpus('../../../data/datasets/gmb-2.2.0', 'subcorpus: Voice of America')
+
+        data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
+        data = filtrations(data, with_dots=True)
+        data = additional_features(data)
 
         self.assertTrue(780339, len(data))
 
