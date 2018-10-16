@@ -2,6 +2,7 @@ import string
 
 from nltk.corpus import stopwords
 from tqdm.autonotebook import tqdm
+import numpy as np
 
 
 def filtrations(df, with_dots=False):
@@ -55,8 +56,6 @@ def filtrations(df, with_dots=False):
 
 
 def crf_pre_processing(df):
-    sentences, tags = [], []
-    curr_sent, curr_tags = [], []
     columns = [
         'token',
         'pos_tag',
@@ -74,15 +73,14 @@ def crf_pre_processing(df):
         'contains_digits',
         'word_len'
     ]
-    for i in tqdm(range(1, len(df)), desc="Compose sentences: "):
-        if df.iloc[i]['token'] not in string.punctuation:
-            curr_sent.append(dict(zip(columns, df.iloc[i][columns].values.tolist())))
-            curr_tags.append(df.iloc[i]['ner_tag'])
-        else:
-            sentences.append(curr_sent)
-            tags.append(curr_tags)
-            curr_sent, curr_tags = [], []
-    return sentences, tags
+    df[df.lemma == '.'] = '%'
+    X, y = df[columns].values, df['ner_tag'].values
+    X, y = np.split(X, np.argwhere(X[:, 0] == '%').flatten()), np.split(y, np.argwhere(y == '%').flatten())
+    for i in range(1, max(len(X), len(y))):
+        X[i] = X[i][1:]
+        y[i] = y[i][1:]
+    X = [[dict(zip(columns, word)) for word in sentence] for sentence in X]
+    return X, y
 
 
 def additional_features(df):
