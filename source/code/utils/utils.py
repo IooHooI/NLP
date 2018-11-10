@@ -17,16 +17,16 @@ def filter_by_subcorpus(data_root_folder, subcorpus_name):
     return np.array(data_folders)[mask]
 
 
-def get_raw_texts(folders, cache_folder):
-    if not os.path.exists(os.path.join(cache_folder, 'en.raw.extracted.npy')):
+def get_tagged_texts(folders, cache_folder):
+    if not os.path.exists(os.path.join(cache_folder, 'en.tags.extracted.npy')):
         texts = []
         for folder in tqdm(folders, desc="Read files: "):
-            with open(os.path.join(folder, 'en.raw'), 'r', encoding='utf-8') as myfile:
-                texts.append(myfile.read().replace('\n', ''))
-        np.save(os.path.join(cache_folder, 'en.raw.extracted.npy'), texts)
+            with open(os.path.join(folder, 'en.tags'), 'r', encoding='utf-8') as myfile:
+                texts.extend(myfile.readlines())
+        np.save(os.path.join(cache_folder, 'en.tags.extracted.npy'), texts)
         return texts
     else:
-        return np.load(os.path.join(cache_folder, 'en.raw.extracted.npy'))
+        return np.load(os.path.join(cache_folder, 'en.tags.extracted.npy'))
 
 
 def get_tagged_texts_as_pd(folders, cache_folder):
