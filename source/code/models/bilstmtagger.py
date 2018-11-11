@@ -1,4 +1,4 @@
-from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 from keras.models import Model
 from keras.models import Input
@@ -30,7 +30,7 @@ from seqeval.metrics import f1_score
 from source.code.utils.utils import create_sub_folders
 
 
-class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
+class BiLSTMTagger(BaseEstimator, ClassifierMixin):
 
     def __init__(self, checkpoint_dir='./', max_len=75, batch_size=32, epochs=5, validation_split=0.1):
         self.checkpoint_dir = checkpoint_dir
@@ -131,6 +131,7 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
                 TQDMNotebookCallback()
             ]
         )
+        return self
 
     def _convers2tags(self, one_hot_predictions):
         out = []
@@ -156,7 +157,7 @@ class BiLSTMTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
         y_pred = self._convers2tags(one_hot_predictions)
 
         y_true = [[self.tag2idx[w] for w in s] for s in y]
-        y_true = pad_sequences(maxlen=75, sequences=y_true, padding="post", value=self.tag2idx["O"])
+        y_true = pad_sequences(maxlen=self.max_len, sequences=y_true, padding="post", value=self.tag2idx["O"])
         y_true = [[self.idx2tag[w] for w in s] for s in y_true]
 
         return f1_score(y_true, y_pred)

@@ -25,19 +25,15 @@ def iob3bio(tags):
 
 def filtrations(df, with_dots=False):
     if with_dots:
-        tqdm.pandas(desc="Punctuation without dots: ")
+        tqdm.pandas(desc="Punctuation with dots: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation.replace('.', ''))]
     else:
-        tqdm.pandas(desc="Punctuation with dots: ")
+        tqdm.pandas(desc="Punctuation without dots: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
 
-    mask = (df.ner_tag != '[]') | (df.ner_tag != '') | (df.lemma != '') | (df.token != '')
+    mask = (df.ner_tag != '[]') & (df.ner_tag != '') & (df.lemma != '') & (df.token != '')
 
     df = df[mask]
-
-    tqdm.pandas(desc="Target tags: ")
-
-    df['ner_tag'] = iob3bio(df.ner_tag.values)
 
     tqdm.pandas(desc="")
 

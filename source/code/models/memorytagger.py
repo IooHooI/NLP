@@ -1,17 +1,13 @@
-from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
-from sklearn.metrics import f1_score
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 
-class MemoryTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
+class MemoryTagger(BaseEstimator, ClassifierMixin):
 
     def __init__(self):
         self.memory = {}
         self.tags = []
 
     def fit(self, X, y):
-        """
-        Expects a list of words as X and a list of tags as y.
-        """
         voc = {}
         for x, t in zip(X, y):
             if t not in self.tags:
@@ -25,13 +21,10 @@ class MemoryTagger(BaseEstimator, TransformerMixin, ClassifierMixin):
                 voc[x] = {t: 1}
         for k, d in voc.items():
             self.memory[k] = max(d, key=d.get)
+        return self
 
     def predict(self, X, y=None):
-        """
-        Predict the the tag from memory. If word is unknown, predict 'O'.
-        """
         return [self.memory.get(x, 'O') for x in X]
 
     def score(self, X, y, sample_weight=None):
         y_pred = self.predict(X)
-        return f1_score(y, y_pred, average='macro')
