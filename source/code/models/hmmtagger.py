@@ -67,7 +67,8 @@ class HMMTagger(BaseEstimator, ClassifierMixin):
             encoded_sentence.append(word)
         return encoded_sentence
 
-    def _get_states_mapping_from(self, sentences):
+    @staticmethod
+    def _get_states_mapping_from(sentences):
         states = list(set([tag for sentence in sentences for tag in sentence]))
         state2idx = {t: i for i, t in enumerate(states)}
         idx2state = {i: w for w, i in state2idx.items()}
