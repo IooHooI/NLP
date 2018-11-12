@@ -13,7 +13,10 @@ class SentenceExtractor(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None, **kwargs):
         X[X.lemma == '.'] = '%'
         X, y = X[self.features].values, X.ner_tag.values
-        X, y = np.split(X, np.argwhere(X[:, 0] == '%').flatten()), np.split(y, np.argwhere(y == '%').flatten())
+        if isinstance(self.features, (list,)):
+            X, y = np.split(X, np.argwhere(X[:, 0] == '%').flatten()), np.split(y, np.argwhere(y == '%').flatten())
+        else:
+            X, y = np.split(X, np.argwhere(X == '%').flatten()), np.split(y, np.argwhere(y == '%').flatten())
         for i in range(1, max(len(X), len(y))):
             X[i] = X[i][1:]
             y[i] = y[i][1:]

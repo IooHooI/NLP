@@ -7,11 +7,11 @@ from tqdm.autonotebook import tqdm
 def filter_by_subcorpus(data_root_folder, subcorpus_name):
     data_folders = [
         os.path.join(data_root_folder, 'data', folder, subfolder)
-        for folder in tqdm(os.listdir(os.path.join(data_root_folder, 'data')), desc="Read folders: ")
+        for folder in tqdm(os.listdir(os.path.join(data_root_folder, 'data')), desc="READ FOLDERS: ")
         for subfolder in os.listdir(os.path.join(data_root_folder, 'data', folder))
     ]
     mask = []
-    for folder in tqdm(data_folders, desc="Filter folders: "):
+    for folder in tqdm(data_folders, desc="FILTER FOLDERS: "):
         with open(os.path.join(folder, 'en.met'), 'r', encoding='utf-8') as myfile:
             mask.append(subcorpus_name in myfile.read().replace('\n', ''))
     return np.array(data_folders)[mask]
@@ -20,7 +20,7 @@ def filter_by_subcorpus(data_root_folder, subcorpus_name):
 def get_tagged_texts(folders, cache_folder):
     if not os.path.exists(os.path.join(cache_folder, 'en.tags.extracted.npy')):
         texts = []
-        for folder in tqdm(folders, desc="Read files: "):
+        for folder in tqdm(folders, desc="READ FILES: "):
             with open(os.path.join(folder, 'en.tags'), 'r', encoding='utf-8') as myfile:
                 texts.extend(myfile.readlines())
         np.save(os.path.join(cache_folder, 'en.tags.extracted.npy'), texts)
@@ -45,7 +45,7 @@ def get_tagged_texts_as_pd(folders, cache_folder):
         ]
         tagged_dfs = []
 
-        for folder in tqdm(folders, desc="Read files: "):
+        for folder in tqdm(folders, desc="READ FILES: "):
             tagged_text_df = pd.read_csv(
                 os.path.join(folder, 'en.tags'),
                 delimiter='\t',

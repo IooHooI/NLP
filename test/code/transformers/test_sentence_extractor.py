@@ -14,7 +14,11 @@ class TestSentenceExtractor(unittest.TestCase):
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
         data = filtrations(data, with_dots=True)
 
-        X, y = SentenceExtractor().fit_transform(data)
+        X, y = SentenceExtractor(features=[
+            'token',
+            'pos_tag',
+            'lemma'
+        ]).fit_transform(data)
 
         lemma_sentence_lenghts = list(map(len, X))
 

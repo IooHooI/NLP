@@ -2,6 +2,8 @@ import unittest
 
 from sklearn.model_selection import train_test_split
 
+from seqeval.metrics import classification_report as seqeval_classification_report
+
 from source.code.utils.utils import filter_by_subcorpus
 from source.code.utils.utils import get_tagged_texts_as_pd
 
@@ -24,19 +26,23 @@ class TestHMMTagger(unittest.TestCase):
 
         data.ner_tag = iob3bio(data.ner_tag.values)
 
-        hmm_tagger = HMMTagger()
-
-        X, y = SentenceExtractor(features=[
-            'token',
-            'pos_tag',
-            'lemma'
-        ]).fit_transform(data)
+        X, y = SentenceExtractor(features='lemma').fit_transform(data)
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
+        hmm_tagger = HMMTagger()
+
         hmm_tagger.fit(X_train, y_train)
 
+        X_test = [sentence for sentence in X_test if len(sentence) > 0]
 
+        y_test = [sentence.tolist() for sentence in y_test if len(sentence) > 0]
+
+        y_pred = hmm_tagger.predict(X_test)
+
+        seqeval_report = seqeval_classification_report(y_pred=y_pred, y_true=y_test)
+
+        print(seqeval_report)
 
 
 if __name__ == '__main__':

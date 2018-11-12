@@ -8,7 +8,7 @@ def iob3bio(tags):
     entity = False
     curr_tag = ''
     tags = [str(x).split('-')[0] if str(x) != 'O' else str(x) for x in tags]
-    for i in tqdm(range(len(tags)), desc='IOB to BIO: '):
+    for i in tqdm(range(len(tags)), desc='IOB TO BIO: '):
         if tags[i] != 'O' and not entity:
             entity = True
             curr_tag = tags[i]
@@ -25,10 +25,10 @@ def iob3bio(tags):
 
 def filtrations(df, with_dots=False):
     if with_dots:
-        tqdm.pandas(desc="Punctuation with dots: ")
+        tqdm.pandas(desc="WITH DOTS: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation.replace('.', ''))]
     else:
-        tqdm.pandas(desc="Punctuation without dots: ")
+        tqdm.pandas(desc="WITHOUT DOTS: ")
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
 
     mask = (df.ner_tag != '[]') & (df.ner_tag != '') & (df.lemma != '') & (df.token != '')
@@ -60,13 +60,13 @@ def crf_pre_processing(df):
 
 
 def additional_features(df):
-    tqdm.pandas(desc="Is title: ")
+    tqdm.pandas(desc="IS TITLE: ")
     df['is_title'] = df.token.progress_apply(lambda x: int(str(x).istitle()))
 
-    tqdm.pandas(desc="Contains digits: ")
+    tqdm.pandas(desc="CONTAINS DIGITS: ")
     df['contains_digits'] = df.token.progress_apply(lambda x: int(not str(x).isalpha()))
 
-    tqdm.pandas(desc="Word len: ")
+    tqdm.pandas(desc="WORD LENGTH: ")
     df['word_len'] = df.token.progress_apply(lambda x: len(str(x)))
 
     tqdm.pandas(desc="")
