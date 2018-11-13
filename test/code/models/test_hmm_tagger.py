@@ -17,7 +17,8 @@ from source.code.models.hmmtagger import HMMTagger
 
 class TestHMMTagger(unittest.TestCase):
 
-    def test_case_1(self):
+    @classmethod
+    def setUpClass(cls):
         folders = filter_by_subcorpus('../../../data/datasets/gmb-2.2.0', 'subcorpus: Voice of America')
 
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
@@ -26,21 +27,74 @@ class TestHMMTagger(unittest.TestCase):
 
         data.ner_tag = iob3bio(data.ner_tag.values)
 
-        X, y = SentenceExtractor(features='lemma').fit_transform(data)
+        X, y = SentenceExtractor(
+            features=[
+                'token',
+                'pos_tag',
+                'lemma'
+            ],
+            target='ner_tag'
+        ).fit_transform(data)
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+        cls.X_train, cls.X_test, cls.y_train, cls.y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+    def test_case_1_without_additional_features(self):
+        X_train_1_f = [sentence[:, 0] for sentence in self.X_train]
+
+        X_test_1_f = [sentence[:, 0] for sentence in self.X_test]
 
         hmm_tagger = HMMTagger()
 
-        hmm_tagger.fit(X_train, y_train)
+        hmm_tagger.fit(X_train_1_f, self.y_train)
 
-        X_test = [sentence for sentence in X_test if len(sentence) > 0]
+        X_test_1_f = [sentence for sentence in X_test_1_f if len(sentence) > 0]
 
-        y_test = [sentence.tolist() for sentence in y_test if len(sentence) > 0]
+        self.y_test = [sentence.tolist() for sentence in self.y_test if len(sentence) > 0]
 
-        y_pred = hmm_tagger.predict(X_test)
+        self.y_pred = hmm_tagger.predict(X_test_1_f)
 
-        seqeval_report = seqeval_classification_report(y_pred=y_pred, y_true=y_test)
+        seqeval_report = seqeval_classification_report(y_pred=self.y_pred, y_true=self.y_test)
+
+        print(seqeval_report)
+
+    def test_case_2_with_1_additional_feature(self):
+        X_train_2_fs = [sentence[:, 0:2] for sentence in self.X_train]
+
+        X_test_2_fs = [sentence[:, 0:2] for sentence in self.X_test]
+
+        hmm_tagger = HMMTagger(features=[
+            'token',
+            'pos_tag'
+        ])
+
+        hmm_tagger.fit(X_train_2_fs, self.y_train)
+
+        X_test_2_fs = [sentence for sentence in X_test_2_fs if len(sentence) > 0]
+
+        self.y_test = [sentence.tolist() for sentence in self.y_test if len(sentence) > 0]
+
+        self.y_pred = hmm_tagger.predict(X_test_2_fs)
+
+        seqeval_report = seqeval_classification_report(y_pred=self.y_pred, y_true=self.y_test)
+
+        print(seqeval_report)
+
+    def test_case_2_with_2_additional_features(self):
+        hmm_tagger = HMMTagger(features=[
+            'token',
+            'pos_tag',
+            'lemma'
+        ])
+
+        hmm_tagger.fit(self.X_train, self.y_train)
+
+        self.X_test = [sentence for sentence in self.X_test if len(sentence) > 0]
+
+        self.y_test = [sentence.tolist() for sentence in self.y_test if len(sentence) > 0]
+
+        self.y_pred = hmm_tagger.predict(self.X_test)
+
+        seqeval_report = seqeval_classification_report(y_pred=self.y_pred, y_true=self.y_test)
 
         print(seqeval_report)
 
