@@ -2,19 +2,27 @@ import unittest
 
 from source.code.utils.utils import filter_by_subcorpus
 from source.code.utils.utils import get_tagged_texts_as_pd
+
 from source.code.utils.preprocessing import filtrations
+from source.code.utils.preprocessing import iob3bio
+
 from source.code.transformers.sentenceextractor import SentenceExtractor
+from source.code.transformers.crftransformer import CRFTransformer
 
 
-class TestSentenceExtractor(unittest.TestCase):
+class TestSRFTransformer(unittest.TestCase):
 
-    def test_case_1(self):
+    @classmethod
+    def setUpClass(cls):
         folders = filter_by_subcorpus('../../../data/datasets/gmb-2.2.0', 'subcorpus: Voice of America')
 
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
+
         data = filtrations(data, with_dots=True)
 
-        X, y = SentenceExtractor(
+        data.ner_tag = iob3bio(data.ner_tag.values)
+
+        cls.X, cls.y = SentenceExtractor(
             features=[
                 'token',
                 'pos_tag',
@@ -23,13 +31,14 @@ class TestSentenceExtractor(unittest.TestCase):
             target='ner_tag'
         ).fit_transform(data)
 
-        lemma_sentence_lenghts = list(map(len, X))
+    def test_case_1(self):
+        X = CRFTransformer(features=[
+            'token',
+            'pos_tag',
+            'lemma'
+        ]).fit_transform(self.X, self.y)
 
-        tag_sentence_lenghts = list(map(len, y))
-
-        self.assertTrue(
-            all(len_lemmas == len_tags for len_lemmas, len_tags in zip(lemma_sentence_lenghts, tag_sentence_lenghts))
-        )
+        self.assertEqual(len(self.X), len(X))
 
 
 if __name__ == '__main__':

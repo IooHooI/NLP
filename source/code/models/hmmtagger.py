@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import OneHotEncoder
+from seqeval.metrics import f1_score
 from tqdm.autonotebook import tqdm
 from functools import reduce
 import numpy as np
@@ -104,12 +105,12 @@ class HMMTagger(BaseEstimator, ClassifierMixin):
         )
 
     def _calculate_table(self, X, y, X_map, y_map):
-        binarizer = LabelBinarizer(sparse_output=True)
+        one_hot_encoder = OneHotEncoder(handle_unknown='ignore')
         current_open_states_sequence = self._encode_sentences(X, X_map)
         current_hidden_states_sequence = self._encode_sentences(y, y_map)
         nb = MultinomialNB(alpha=self.alpha)
         nb.fit(
-            binarizer.fit_transform(
+            one_hot_encoder.fit_transform(
                 current_open_states_sequence.reshape(-1, 1)
             ),
             current_hidden_states_sequence
@@ -184,4 +185,5 @@ class HMMTagger(BaseEstimator, ClassifierMixin):
             return path, delta, phi
 
     def score(self, X, y, sample_weight=None):
-        pass
+        y_pred = self.predict(X)
+        return f1_score(y, y_pred)

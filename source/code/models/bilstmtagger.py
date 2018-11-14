@@ -85,25 +85,35 @@ class BiLSTMTagger(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         self.words = list(set([word for sentence in X for word in sentence]))
+
         self.words.append("unknown word")
+
         self.words.append("__ENDPAD__")
+
         self.unique_tags = list(set([tag for sentence in y for tag in sentence]))
 
         self.word2idx = {w: i + 1 for i, w in enumerate(self.words)}
+
         self.tag2idx = {t: i for i, t in enumerate(self.unique_tags)}
+
         self.idx2tag = {i: w for w, i in self.tag2idx.items()}
 
         self.n_words = len(self.words)
+
         self.n_tags = len(self.unique_tags)
 
         self._build_the_model()
+
         self.model.summary()
 
-        X = [[self.word2idx[w] for w in s] for s in X]
+        X = [[self.word2idx[word] for word in sentence] for sentence in X]
+
         X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
 
-        y = [[self.tag2idx[w] for w in s] for s in y]
+        y = [[self.tag2idx[word] for word in sentence] for sentence in y]
+
         y = pad_sequences(maxlen=self.max_len, sequences=y, padding="post", value=self.tag2idx["O"])
+
         y = [to_categorical(i, num_classes=self.n_tags) for i in y]
 
         self.model.fit(
@@ -135,29 +145,37 @@ class BiLSTMTagger(BaseEstimator, ClassifierMixin):
 
     def _convers2tags(self, one_hot_predictions):
         out = []
+
         for pred_i in one_hot_predictions:
             out_i = []
+
             for p in pred_i:
                 p_i = np.argmax(p)
+
                 out_i.append(self.idx2tag[p_i].replace("PAD", "O"))
+
             out.append(out_i)
+
         return out
 
     def predict(self, X, y=None):
         X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
+
         X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
+
         one_hot_predictions = self.model.predict(X, verbose=1)
+
         result = self._convers2tags(one_hot_predictions)
+
         return result
 
     def score(self, X, y, sample_weight=None):
         X = [[self.word2idx[w] if w in self.word2idx else self.word2idx['unknown word'] for w in s] for s in X]
+
         X = pad_sequences(maxlen=self.max_len, sequences=X, padding="post", value=self.n_words - 1)
+
         one_hot_predictions = self.model.predict(X, verbose=1)
+
         y_pred = self._convers2tags(one_hot_predictions)
 
-        y_true = [[self.tag2idx[w] for w in s] for s in y]
-        y_true = pad_sequences(maxlen=self.max_len, sequences=y_true, padding="post", value=self.tag2idx["O"])
-        y_true = [[self.idx2tag[w] for w in s] for s in y_true]
-
-        return f1_score(y_true, y_pred)
+        return f1_score(y, y_pred)

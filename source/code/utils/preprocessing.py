@@ -1,7 +1,7 @@
 import string
 
 from tqdm.autonotebook import tqdm
-import numpy as np
+from nltk.corpus import stopwords
 
 
 def iob3bio(tags):
@@ -24,14 +24,18 @@ def iob3bio(tags):
 
 
 def filtrations(df, with_dots=False):
+    stopWords = set(stopwords.words('english'))
+
     if with_dots:
         tqdm.pandas(desc="WITH DOTS: ")
+
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation.replace('.', ''))]
     else:
         tqdm.pandas(desc="WITHOUT DOTS: ")
+
         df = df[df.lemma.progress_apply(lambda lemma: str(lemma) not in string.punctuation)]
 
-    mask = (df.ner_tag != '[]') & (df.ner_tag != '') & (df.lemma != '') & (df.token != '')
+    mask = (~df.lemma.isin(stopWords)) & (df.ner_tag != '[]') & (df.ner_tag != '') & (df.lemma != '') & (df.token != '')
 
     df = df[mask]
 
@@ -40,33 +44,17 @@ def filtrations(df, with_dots=False):
     return df
 
 
-def crf_pre_processing(df):
-    columns = [
-        'token',
-        'pos_tag',
-        'lemma',
-        'is_title',
-        'contains_digits',
-        'word_len'
-    ]
-    df[df.lemma == '.'] = '%'
-    X, y = df[columns].values, df['ner_tag'].values
-    X, y = np.split(X, np.argwhere(X[:, 0] == '%').flatten()), np.split(y, np.argwhere(y == '%').flatten())
-    for i in range(1, max(len(X), len(y))):
-        X[i] = X[i][1:]
-        y[i] = y[i][1:]
-    X = [[dict(zip(columns, word)) for word in sentence] for sentence in X]
-    return X, y
-
-
 def additional_features(df):
     tqdm.pandas(desc="IS TITLE: ")
+
     df['is_title'] = df.token.progress_apply(lambda x: int(str(x).istitle()))
 
     tqdm.pandas(desc="CONTAINS DIGITS: ")
+
     df['contains_digits'] = df.token.progress_apply(lambda x: int(not str(x).isalpha()))
 
     tqdm.pandas(desc="WORD LENGTH: ")
+
     df['word_len'] = df.token.progress_apply(lambda x: len(str(x)))
 
     tqdm.pandas(desc="")

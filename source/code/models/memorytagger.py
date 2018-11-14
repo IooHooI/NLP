@@ -1,4 +1,5 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
+from seqeval.metrics import f1_score
 
 
 class MemoryTagger(BaseEstimator, ClassifierMixin):
@@ -8,8 +9,10 @@ class MemoryTagger(BaseEstimator, ClassifierMixin):
         self.tags = []
 
     def fit(self, X, y):
+        X_cp = [tag[2] for sentence in X for tag in sentence]
+        y_cp = [tag for sentence in y for tag in sentence]
         voc = {}
-        for x, t in zip(X, y):
+        for x, t in zip(X_cp, y_cp):
             if t not in self.tags:
                 self.tags.append(t)
             if x in voc:
@@ -24,7 +27,8 @@ class MemoryTagger(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X, y=None):
-        return [self.memory.get(x, 'O') for x in X]
+        return [[self.memory.get(tag[2], 'O') for tag in sentence] for sentence in X]
 
     def score(self, X, y, sample_weight=None):
         y_pred = self.predict(X)
+        return f1_score(y, y_pred)
