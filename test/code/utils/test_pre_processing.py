@@ -4,6 +4,7 @@ from source.code.utils.utils import filter_by_subcorpus
 from source.code.utils.utils import get_tagged_texts_as_pd
 from source.code.utils.preprocessing import filtrations
 from source.code.utils.preprocessing import additional_features
+from source.code.utils.preprocessing import iob3bio
 
 
 class TestPreProcessingMethods(unittest.TestCase):
@@ -24,6 +25,7 @@ class TestPreProcessingMethods(unittest.TestCase):
         folders = filter_by_subcorpus('../../../data/datasets/gmb-2.2.0', 'subcorpus: Voice of America')
 
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
+
         data = filtrations(data, with_dots=True)
 
         self.assertTrue(780339 == len(data))
@@ -32,10 +34,27 @@ class TestPreProcessingMethods(unittest.TestCase):
         folders = filter_by_subcorpus('../../../data/datasets/gmb-2.2.0', 'subcorpus: Voice of America')
 
         data = get_tagged_texts_as_pd(folders, '../../../data/datasets/gmb-2.2.0')
+
         data = filtrations(data, with_dots=True)
+
         data = additional_features(data)
 
         self.assertTrue(780339 == len(data))
+
+    def test_case_5(self):
+        ner_tags = iob3bio(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
+    def test_case_6(self):
+        ner_tags = iob3bio(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
+    def test_case_7(self):
+        ner_tags = iob3bio(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
+    def test_case_8(self):
+        ner_tags = iob3bio(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
+    def test_case_9(self):
+        ner_tags = iob3bio(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
 
 
 if __name__ == '__main__':
