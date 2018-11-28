@@ -10,10 +10,6 @@ import numpy as np
 class HMMTagger(BaseEstimator, ClassifierMixin):
 
     def __init__(self, alpha=0.01, features=None):
-        # if features is None:
-        #     self.features = ['word']
-        # else:
-        #     self.features = features
         self.features = features
 
         self.alpha = alpha

@@ -1,4 +1,5 @@
 import string
+import numpy as np
 
 from tqdm.autonotebook import tqdm
 from nltk.corpus import stopwords
@@ -7,7 +8,6 @@ from nltk.corpus import stopwords
 def iob3bio(tags):
     entity = False
     curr_tag = ''
-    tags = [str(x).split('-')[0] if str(x) != 'O' else str(x) for x in tags]
     for i in tqdm(range(len(tags)), desc='IOB TO BIO: '):
         if tags[i] != 'O' and not entity:
             entity = True
@@ -20,6 +20,7 @@ def iob3bio(tags):
             tags[i] = 'B-{}'.format(tags[i])
         else:
             entity = False
+    tags = ['-'.join(str(x).split('-')[0:2]) if str(x) != 'O' else str(x) for x in tags]
     return tags
 
 
@@ -57,6 +58,38 @@ def additional_features(df):
 
     df['word_len'] = df.token.progress_apply(lambda x: len(str(x)))
 
+    tqdm.pandas(desc="SUFFIX: ")
+
+    df['suffix'] = df.lemma.progress_apply(lambda x: str(x)[-3:])
+
+    tqdm.pandas(desc="PREFIX: ")
+
+    df['prefix'] = df.lemma.progress_apply(lambda x: str(x)[0:3])
+
     tqdm.pandas(desc="")
+
+    df['prev_pos_tag'] = np.roll(df.pos_tag.values, 1)
+
+    df['prev_is_title'] = np.roll(df.is_title.values, 1)
+
+    df['prev_contains_digits'] = np.roll(df.contains_digits.values, 1)
+
+    df['prev_word_len'] = np.roll(df.word_len.values, 1)
+
+    df['prev_suffix'] = np.roll(df.suffix.values, 1)
+
+    df['prev_prefix'] = np.roll(df.prefix.values, 1)
+
+    df['next_pos_tag'] = np.roll(df.pos_tag.values, -1)
+
+    df['next_is_title'] = np.roll(df.is_title.values, -1)
+
+    df['next_contains_digits'] = np.roll(df.contains_digits.values, -1)
+
+    df['next_word_len'] = np.roll(df.word_len.values, -1)
+
+    df['next_suffix'] = np.roll(df.suffix.values, -1)
+
+    df['next_prefix'] = np.roll(df.prefix.values, -1)
 
     return df
